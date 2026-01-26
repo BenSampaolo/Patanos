@@ -80,7 +80,7 @@ fn write_reminder_to_file(note: &str, task: &str, path: &str, file: &mut File) {
         return;
     }
 
-    let entry = format!("at \"{path}\": {note}{task}");
+    let entry = format!("\"{path}\": {note}{task}");
     if let Err(e) = writeln!(file, "{}", entry) {
         eprintln!("Could not write to savefile: {e}");
     }
