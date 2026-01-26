@@ -10,16 +10,16 @@ struct Args {
     #[arg(long)]
     patanos: String,
 
-    #[arg(short, long)]
+    #[arg(short, long, num_args = 0..=1, default_missing_value = "? ")]
     note: Option<String>,
 
-    #[arg(short, long)]
+    #[arg(short, long, num_args = 0..=1, default_missing_value = "Todo! ")]
     task: Option<String>,
 
     #[arg(long)]
     path: Option<String>,
 
-    #[arg(long)]
+    #[arg(short, long, num_args = 0..=1, default_missing_value = "All")]
     list: Option<String>,
 
     #[arg(short, long)]
@@ -54,12 +54,11 @@ fn main() {
         write_reminder_to_file(note_text, task_text, &remembered_path_text, &mut save_file);
     }
     if !remove_text.is_empty() {
-        remove_reminder_from_file(
-            &mut save_file,
-            remove_text
-                .parse::<usize>()
-                .expect("Invalid index for reminder removal! "),
-        );
+        if let Ok(num) = remove_text.parse::<usize>() {
+            remove_reminder_from_file(&mut save_file, num);
+        } else {
+            println!("Invalid input for --remove");
+        }
     }
     if !list_text.is_empty() {
         save_file
@@ -81,7 +80,7 @@ fn write_reminder_to_file(note: &str, task: &str, path: &str, file: &mut File) {
         return;
     }
 
-    let entry = format!("Reminder at \"{path}\": {note}{task}");
+    let entry = format!("at \"{path}\": {note}{task}");
     if let Err(e) = writeln!(file, "{}", entry) {
         eprintln!("Could not write to savefile: {e}");
     }
@@ -100,7 +99,7 @@ fn read_reminder_of_file(file: &mut File, lines_to_read: i32) {
     };
 
     for (i, line) in lines.iter().take(count).enumerate() {
-        println!("{} {}", i + 1, line);
+        println!("{}. Reminder at {}", i + 1, line);
     }
 }
 
