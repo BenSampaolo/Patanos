@@ -1,0 +1,7 @@
+#!/bin/bash
+
+THIS_DIRECTORY="$(dirname $(readlink -f $0))"
+PATANOS_TARGET_DIRECTORY=${CARGO_TARGET_DIR:-${THIS_DIRECTORY}/target}
+
+# cargo build --manifest-path="${THIS_DIRECTORY}/Cargo.toml"
+"${PATANOS_TARGET_DIRECTORY}/debug/patanos" --patanos "${PATANOS_TARGET_DIRECTORY}" "$@"
