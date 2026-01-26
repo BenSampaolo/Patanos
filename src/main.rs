@@ -109,7 +109,7 @@ fn remove_reminder_from_file(file: &mut File, idx_to_remove: usize) {
 
     lines.sort();
 
-    if idx_to_remove >= lines.len() || idx_to_remove == 0 {
+    if idx_to_remove > lines.len() || idx_to_remove == 0 {
         println!("Error: Index {} out of range!", idx_to_remove);
         return;
     }
