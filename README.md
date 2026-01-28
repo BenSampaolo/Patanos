@@ -4,9 +4,7 @@ Note system for the fish shell
 
 ## How to install
 
-Run the `setup.sh` file while using the fish shell.
-
-This creates an alias named "patanos" which can be used to execute the patanos program.
+Run `cargo install --locked --git git@github.com:BenSampaolo/Patanos.git` to install.
 
 ## How to use
 
@@ -18,7 +16,7 @@ Tasks can be saved using the `--task` or `-t` flag followed by your own message
 
 The `--list` or `-l` flag lists all current entry's, sorted alphabetically and with an index. Optionally you can write a number as an argument to only print out a specified number of entries.
 
-To remove a note or a task use the `--remove` or `-r` flag with the index aquired from the `--list` flag
+To remove a note or a task use the `--remove` or `-r` flag with the id of the reminder aquired from the `--list` flag
 
 Using multiple flags at once is possible but not recommended
 
