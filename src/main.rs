@@ -7,9 +7,6 @@ use std::path::PathBuf;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
-    #[arg(long)]
-    patanos: String,
-
     #[arg(short, long, num_args = 0..=1, default_missing_value = "? ")]
     note: Option<String>,
 
@@ -35,7 +32,11 @@ fn main() {
     };
 
     let remembered_path_text = remembered_path.to_string_lossy();
-    let mut save_path = PathBuf::from(args.patanos);
+    let mut save_path = dirs::data_dir().expect("Could not find save directory! ");
+    save_path.push("patanos");
+
+    std::fs::create_dir_all(&save_path).expect("Could not create directory structure");
+
     save_path.push("Reminders.txt");
 
     let mut save_file = OpenOptions::new()
