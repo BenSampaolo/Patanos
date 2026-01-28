@@ -77,11 +77,12 @@ fn main() {
 }
 
 fn write_reminder_to_file(note: &str, task: &str, path: &str, file: &mut File) {
-    if note.is_empty() && task.is_empty() {
-        return;
-    }
-
-    let entry = format!("\"{path}\": {note}{task}");
+    let entry = match (task, note) {
+        ("_", "_") => return,
+        ("_", _) => format!("Task at \"{path}\": {task}"),
+        (_, "_") => format!("Note at \"{path}\": {note}"),
+        (_, _) => format!("Task with note at \"{path}\": {task} | {note}"),
+    };
     if let Err(e) = writeln!(file, "{}", entry) {
         eprintln!("Could not write to savefile: {e}");
     }
@@ -100,7 +101,7 @@ fn read_reminder_of_file(file: &mut File, lines_to_read: i32) {
     };
 
     for (i, line) in lines.iter().take(count).enumerate() {
-        println!("{}. Reminder at {}", i + 1, line);
+        println!("{} {}", i + 1, line);
     }
 }
 
