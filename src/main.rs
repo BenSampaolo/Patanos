@@ -1,4 +1,5 @@
 use clap::Parser;
+use ksuid::{self, Ksuid};
 use std::env;
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, Seek, SeekFrom, Write};
@@ -46,8 +47,8 @@ fn main() {
         .open(&save_path)
         .expect("Could not open or create savefile");
 
-    let note_text = args.note.as_deref().unwrap_or("");
-    let task_text = args.task.as_deref().unwrap_or("");
+    let note_text = args.note.as_deref().unwrap_or("_");
+    let task_text = args.task.as_deref().unwrap_or("_");
     let list_text = args.list.as_deref().unwrap_or("");
     let remove_text = args.remove.as_deref().unwrap_or("");
 
@@ -55,11 +56,7 @@ fn main() {
         write_reminder_to_file(note_text, task_text, &remembered_path_text, &mut save_file);
     }
     if !remove_text.is_empty() {
-        if let Ok(num) = remove_text.parse::<usize>() {
-            remove_reminder_from_file(&mut save_file, num);
-        } else {
-            println!("Invalid input for --remove");
-        }
+        remove_reminder_from_file(&mut save_file, remove_text.to_owned());
     }
     if !list_text.is_empty() {
         save_file
@@ -77,11 +74,12 @@ fn main() {
 }
 
 fn write_reminder_to_file(note: &str, task: &str, path: &str, file: &mut File) {
+    let id = Ksuid::generate().to_base62();
     let entry = match (task, note) {
         ("_", "_") => return,
-        ("_", _) => format!("Task at \"{path}\": {task}"),
-        (_, "_") => format!("Note at \"{path}\": {note}"),
-        (_, _) => format!("Task with note at \"{path}\": {task} | {note}"),
+        ("_", _) => format!("{id} Note at \"{path}\": {note}"),
+        (_, "_") => format!("{id} Task at \"{path}\": {task}"),
+        (_, _) => format!("{id} Task with note at \"{path}\": {task} | {note}"),
     };
     if let Err(e) = writeln!(file, "{}", entry) {
         eprintln!("Could not write to savefile: {e}");
@@ -100,23 +98,32 @@ fn read_reminder_of_file(file: &mut File, lines_to_read: i32) {
         lines_to_read as usize
     };
 
-    for (i, line) in lines.iter().take(count).enumerate() {
-        println!("{} {}", i + 1, line);
+    for line in lines.iter().take(count) {
+        println!("{line}");
     }
 }
 
-fn remove_reminder_from_file(file: &mut File, idx_to_remove: usize) {
+fn remove_reminder_from_file(file: &mut File, id_to_remove: String) {
     let reader = BufReader::new(file.try_clone().expect("Failed to clone file handle"));
     let mut lines: Vec<String> = reader.lines().map_while(Result::ok).collect();
 
     lines.sort();
 
-    if idx_to_remove > lines.len() || idx_to_remove == 0 {
-        println!("Error: Index {} out of range!", idx_to_remove);
+    let lines_matching_id = lines
+        .clone()
+        .iter()
+        .filter(|s| s.starts_with(&id_to_remove))
+        .count();
+
+    if lines_matching_id == 0 {
+        println!("No matching ID's to remove! ");
+        return;
+    } else if lines_matching_id > 1 {
+        println!("To many ID's matching, please be more specific! ");
         return;
     }
 
-    lines.remove(idx_to_remove - 1);
+    lines.retain(|s| !s.starts_with(&id_to_remove));
 
     file.set_len(0).expect("Failed to truncate file");
     file.seek(SeekFrom::Start(0))
